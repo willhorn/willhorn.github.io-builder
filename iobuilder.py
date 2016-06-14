@@ -40,7 +40,7 @@ class iobuilder:
         with open(destination_path, 'w') as f:
             f.write(lxml.html.tostring(template, pretty_print=True))
         # it's not really pretty printed, so clean up with https://github.com/htacg/tidy-html5
-        subprocess.check_call(['tidy', '-im', destination_path])
+        subprocess.check_call(['tidy', '-im', '-w', '132', destination_path])
         return destination_path
                 
     def get_goal_list_html(self, file):
