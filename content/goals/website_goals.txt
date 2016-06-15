@@ -7,5 +7,5 @@ o [more favicon images](https://css-tricks.com/favicon-quiz/)
 o responsive font size
 o .min.css files
 o responsive margins
-o center content on large viewports
+x center content on large viewports
 o nav dark on respective pages with line below
