@@ -4,7 +4,7 @@ x [Intro to HTML and CSS](https://www.udacity.com/courses/intro-to-html-and-css-
 x [Responsive Web Design Fundamentals](https://www.udacity.com/courses/responsive-web-design-fundamentals--ud893)
 x [Responsive Images](https://www.udacity.com/courses/responsive-images--ud882)
 x [JavaScript Basics](https://www.udacity.com/courses/javascript-basics--ud804)
-o [Intro to jQuery](https://www.udacity.com/courses/intro-to-jquery--ud245)
+x [Intro to jQuery](https://www.udacity.com/courses/intro-to-jquery--ud245)
 o [Object-Oriented JavaScript](https://www.udacity.com/courses/object-oriented-javascript--ud015)
 o [HTML5 Canvas](https://www.udacity.com/courses/html5-canvas--ud292)
 o [Website Performance Optimization](https://www.udacity.com/courses/website-performance-optimization--ud884)
