@@ -1,9 +1,10 @@
 #!/usr/bin/python
 
-import lxml.html, lxml.etree
+import lxml.html
 import os, sys, subprocess
 from copy import deepcopy
-import re
+from mdchecklistext import ChecklistExtension
+import markdown
 
 def dir_check(dir):
     if not os.path.isdir(dir):
@@ -19,6 +20,7 @@ class iobuilder:
         self.destination_dir = os.path.join(base_dir, 'willhorn.github.io')
         dir_check(self.destination_dir)
         self.template = lxml.html.parse(os.path.join(self.source_dir, 'template.html'))
+        self.md = markdown.Markdown(extensions=[ChecklistExtension()])
 
     def build_io(self):
         self.build_about_page()
@@ -38,42 +40,11 @@ class iobuilder:
         subprocess.check_call(['tidy', '-imq', '-w', '132', destination_path])
         return destination_path
 
-    def text_line_to_html(self, line):
-        parts = line.strip().split(' ', 1)
-        content = parts[-1]
-        element = 'p'
-        attributes = {}
-        if len(parts) > 1:
-            prefix = parts[0]
-            if re.match(r'^#{1,6}$', prefix):
-                element = 'h' + str(len(prefix))
-            elif prefix in ('*', '-', '+'):
-                element = 'li'
-            elif prefix == 'o':
-                element = 'li'
-                attributes = {'class': 'goal'}
-            elif prefix == 'x':
-                element = 'li'
-                attributes = {'class': 'goal completed_goal'}
-            elif re.match(r'^\d+\.$', prefix):
-                element = 'li'
-                attributes = {'class': 'goal'}
-            else:
-                content = ' '.join([prefix, content])
-        if content:
-            content = self.link_to_html(content)
-            html = lxml.html.fromstring('<{0}>{1}</{0}>'.format(element, content))
-            for k, v in attributes.items():
-                html.set(k, v)
-        else:
-            html = None
+    def md_convert(self, file):
+        with open(file, 'rb') as f:
+            text = f.read()
+        html = self.md.convert(text)
         return html
-
-    def linkrepl(self, matchobj):
-        return '<a href="' + matchobj.group('href') + '">' + matchobj.group('content') + '</a>'
-
-    def link_to_html(self, content):
-        return re.sub(r'\[(?P<content>[^\]]+)\]\((?P<href>[^\)]+)\)', self.linkrepl, content)
 
     ### ABOUT ###
     def build_about_page(self):
@@ -81,12 +52,8 @@ class iobuilder:
         root = template.getroot()
         self.set_selected_nav(root, 'nav_about')
         main_content = root.find(".//section[@id='main_content']")
-        file = os.path.join(self.source_content_dir, 'about.txt')
-        with open(file, 'rb') as f:
-            for line in f:
-                html = self.text_line_to_html(line)
-                if html is not None:
-                    main_content.append(html)
+        file = os.path.join(self.source_content_dir, 'about.md')
+        main_content.append(lxml.html.fromstring(self.md_convert(file)))
         return self.write_html(template, 'index.html')
 
     ### GOALS ###
@@ -98,31 +65,16 @@ class iobuilder:
         main_content.set('class', 'goals_content flex_container')
         goals_dir = os.path.join(self.source_content_dir, 'goals')
         dir_check(goals_dir)
+        article_template = '<article class="goals_group" id="{0}">{1}</article>'
         for file in os.listdir(goals_dir):
-            if file.endswith('.txt'):
-                main_content.append(self.get_goal_list_html(file))
+            if file.endswith('.md'):
+                id = file.split('.')[0]
+                path = os.path.join(goals_dir, file)
+                article = article_template.format(id, self.md_convert(path))
+                main_content.append(lxml.html.fromstring(article))
+                # html.set('class', 'goals_group_title')
         return self.write_html(template, 'goals.html')
 
-    def get_goal_list_html(self, file):
-        path = os.path.join(self.source_content_dir, 'goals', file)
-        article = lxml.html.fromstring('<article class="goals_group"></article>')
-        article.set('id', os.path.splitext(file)[0])
-        goals = lxml.html.fromstring('<ul class="goals_list"></ul>')
-        with open(path, 'rb') as f:
-            for line in f:
-                html = self.text_line_to_html(line)
-                if html is None:
-                    pass
-                elif html.tag == 'li':
-                    goals.append(html)
-                elif re.match(r'^h[1-6]$', html.tag):
-                    html.set('class', 'goals_group_title')
-                    article.append(html)
-                else:
-                    raise Exception("unexpected tag '{0}' in goals list {1}".format(html.tag, file))
-        article.append(goals)
-        return article
-    
 if __name__ == '__main__':
     if len(sys.argv) > 1:
         base_dir = sys.argv[1]
