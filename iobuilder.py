@@ -35,13 +35,14 @@ class iobuilder:
     def write_html(self, html, file):
         destination_path = os.path.join(self.destination_dir, file)
         with open(destination_path, 'w') as f:
-            f.write(lxml.html.tostring(html, pretty_print=True))
+            html_string = lxml.html.tostring(html, pretty_print=True, encoding="unicode")
+            f.write(html_string)
         # it's not really pretty printed, so clean up with https://github.com/htacg/tidy-html5
         subprocess.check_call(['tidy', '-imq', '-w', '132', destination_path])
         return destination_path
 
     def md_convert(self, file):
-        with open(file, 'rb') as f:
+        with open(file, 'r') as f:
             text = f.read()
         html = self.md.convert(text)
         return html
