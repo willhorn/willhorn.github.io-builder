@@ -1,14 +1,19 @@
 #!/usr/bin/python
 
-import lxml.html
-import os, sys, subprocess
-from copy import deepcopy
-from mdchecklistext import ChecklistExtension
+import os
+import subprocess
+import sys
+
+import jinja2
 import markdown
+
+from mdchecklistext import ChecklistExtension
+
 
 def dir_check(dir):
     if not os.path.isdir(dir):
         raise Exception('directory not found: {0}'.format(dir))
+
 
 class iobuilder:
 
@@ -19,25 +24,22 @@ class iobuilder:
         dir_check(self.source_content_dir)
         self.destination_dir = os.path.join(base_dir, 'willhorn.github.io')
         dir_check(self.destination_dir)
-        self.template = lxml.html.parse(os.path.join(self.source_dir, 'template.html'))
         self.md = markdown.Markdown(extensions=[ChecklistExtension()])
+        self.template_env = jinja2.Environment(
+            loader=jinja2.FileSystemLoader(os.path.join(self.source_dir, 'templates'))
+        )
 
     def build_io(self):
         self.build_about_page()
         self.build_goals_page()
         return self.destination_dir
 
-    ### COMMON ###
-    def set_selected_nav(self, root, nav_id):
-        nav_button = root.find(".//li[@id='{0}']".format(nav_id))
-        nav_button.set('class', 'nav_selected')
-        
+    # COMMON
     def write_html(self, html, file):
         destination_path = os.path.join(self.destination_dir, file)
         with open(destination_path, 'w') as f:
-            html_string = lxml.html.tostring(html, pretty_print=True, encoding="unicode")
-            f.write(html_string)
-        # it's not really pretty printed, so clean up with https://github.com/htacg/tidy-html5
+            f.write(html)
+        # clean up with https://github.com/htacg/tidy-html5
         subprocess.check_call(['tidy', '-imq', '-w', '132', destination_path])
         return destination_path
 
@@ -47,34 +49,31 @@ class iobuilder:
         html = self.md.convert(text)
         return html
 
-    ### ABOUT ###
+    # ABOUT
     def build_about_page(self):
-        template = deepcopy(self.template)
-        root = template.getroot()
-        self.set_selected_nav(root, 'nav_about')
-        main_content = root.find(".//section[@id='main_content']")
-        file = os.path.join(self.source_content_dir, 'about.md')
-        main_content.append(lxml.html.fromstring(self.md_convert(file)))
-        return self.write_html(template, 'index.html')
+        template = self.template_env.get_template('about.html')
+        md_file = os.path.join(self.source_content_dir, 'about.md')
+        html = self.md_convert(md_file)
+        html = template.render(html=html)
+        return self.write_html(html, 'index.html')
 
-    ### GOALS ###
+    # GOALS
     def build_goals_page(self):
-        template = deepcopy(self.template)
-        root = template.getroot()
-        self.set_selected_nav(root, 'nav_goals')
-        main_content = root.find(".//section[@id='main_content']")
-        main_content.set('class', 'goals_content flex_container')
+        template = self.template_env.get_template('goals.html')
         goals_dir = os.path.join(self.source_content_dir, 'goals')
         dir_check(goals_dir)
-        article_template = '<article class="goals_group" id="{0}">{1}</article>'
+        goal_groups = []
         for file in os.listdir(goals_dir):
             if file.endswith('.md'):
-                id = file.split('.')[0]
                 path = os.path.join(goals_dir, file)
-                article = article_template.format(id, self.md_convert(path))
-                main_content.append(lxml.html.fromstring(article))
-                # html.set('class', 'goals_group_title')
-        return self.write_html(template, 'goals.html')
+                goal_group = {
+                    'id': file.split('.')[0],
+                    'html': self.md_convert(path)
+                }
+                goal_groups.append(goal_group)
+        html = template.render(goal_groups=goal_groups)
+        return self.write_html(html, 'goals.html')
+
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:

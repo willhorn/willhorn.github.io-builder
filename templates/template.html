@@ -20,12 +20,13 @@
     </header>
     <nav>
       <ul class="flex_container navigation">
-        <li id="nav_about"><a href="index.html">About</a></li>
-        <li id="nav_blog"><a href="#">Blog</a></li>
-        <li id="nav_goals"><a href="goals.html">Goals</a></li>
+        <li id="nav_about" class="{% block nav_about %}{% endblock %}"><a href="index.html">About</a></li>
+        <li id="nav_blog" class="{% block nav_blog %}{% endblock %}"><a href="#">Blog</a></li>
+        <li id="nav_goals" class="{% block nav_goals %}{% endblock %}"><a href="goals.html">Goals</a></li>
       </ul>
     </nav>
-    <section id="main_content">
+    <section id="main_content" class="{% block main_content_class %}{% endblock %}">
+      {% block content %}{% endblock %}
     </section>
   </body>
 </html>

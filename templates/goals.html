@@ -1,0 +1,14 @@
+{% extends "template.html" %}
+{%- block nav_goals -%}
+    nav_selected
+{%- endblock -%}
+{%- block main_content_class -%}
+    goals_content flex_container
+{%- endblock -%}
+{% block content -%}
+    {% for goal_group in goal_groups %}
+        <article class="goals_group" id="{{ goal_group.id }}">
+            {{ goal_group.html }}
+        </article>
+    {% endfor %}
+{%- endblock %}
