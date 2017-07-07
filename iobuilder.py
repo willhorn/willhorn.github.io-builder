@@ -66,11 +66,28 @@ class iobuilder:
         for file in os.listdir(goals_dir):
             if file.endswith('.md'):
                 path = os.path.join(goals_dir, file)
+                with open(path) as f:
+                    line_count = len(f.readlines())
                 goal_group = {
                     'id': file.split('.')[0],
-                    'html': self.md_convert(path)
+                    'html': self.md_convert(path),
+                    'len': line_count
                 }
                 goal_groups.append(goal_group)
+        goal_groups.sort(key=lambda x: x['len'], reverse=True)
+        columns = [
+            {'content': [], 'len': 0},
+            {'content': [], 'len': 0}
+        ]
+        for goal_group in goal_groups:
+            column = 0
+            if columns[0]['len'] > columns[1]['len']:
+                column = 1
+            columns[column]['content'].append(goal_group)
+            columns[column]['len'] += goal_group['len']
+        goal_groups = columns[0]['content'] + columns[1]['content']
+        for i in range(len(goal_groups)):
+            goal_groups[i]['order'] = i
         html = template.render(goal_groups=goal_groups)
         return self.write_html(html, 'goals.html')
 

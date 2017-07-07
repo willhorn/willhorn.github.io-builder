@@ -7,7 +7,7 @@
 {%- endblock -%}
 {% block content -%}
     {% for goal_group in goal_groups %}
-        <article class="goals_group" id="{{ goal_group.id }}">
+        <article class="goals_group" id="{{ goal_group.id }}" style="order: {{ goal_group.order }};">
             {{ goal_group.html }}
         </article>
     {% endfor %}
