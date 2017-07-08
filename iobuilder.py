@@ -32,6 +32,7 @@ class iobuilder:
     def build_io(self):
         self.build_about_page()
         self.build_goals_page()
+        self.build_blog_page()
         return self.destination_dir
 
     # COMMON
@@ -91,6 +92,18 @@ class iobuilder:
         html = template.render(goal_groups=goal_groups)
         return self.write_html(html, 'goals.html')
 
+    # BLOG
+    def build_blog_page(self):
+        template = self.template_env.get_template('blog.html')
+        blog_dir = os.path.join(self.source_content_dir, 'blog')
+        dir_check(blog_dir)
+        blog_entries = []
+        for file in os.listdir(blog_dir):
+            if file.endswith('.md'):
+                path = os.path.join(blog_dir, file)
+                blog_entries.append(self.md_convert(path))
+        html = template.render(blog_entries=blog_entries)
+        return self.write_html(html, 'blog.html')
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
