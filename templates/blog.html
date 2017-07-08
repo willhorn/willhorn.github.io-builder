@@ -1,0 +1,11 @@
+{% extends "template.html" %}
+{%- block nav_blog -%}
+    nav_selected
+{%- endblock -%}
+{% block content -%}
+    {% for entry in blog_entries %}
+        <article>
+            {{ entry }}
+        </article>
+    {% endfor %}
+{%- endblock %}
