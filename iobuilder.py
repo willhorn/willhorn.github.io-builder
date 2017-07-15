@@ -49,19 +49,23 @@ class iobuilder:
         return content
 
     def get_content_from_md(self, path):
-        # TODO: append publish/edit dates to end of blog entries
-        # if they're the same only include publish
-        # markdown, html, publish_date, last_edit_date
         with open(path, 'r') as f:
             md = f.read()
+        publish_date = self.get_commit_date(path, -1)
+        last_edit_date = self.get_commit_date(path, 0)
         return {
             'markdown': md,
             'markdown_line_count': len(md.splitlines()),
             'html': self.md.convert(md),
-            'publish_date': self.get_commit_date(path, -1),
-            'last_edit_date': self.get_commit_date(path, 0),
+            'publish_date': publish_date,
+            'publish_date_string': self._date_to_string(publish_date),
+            'last_edit_date': last_edit_date,
+            'last_edit_date_string': self._date_to_string(last_edit_date),
             'path': path
         }
+
+    def _date_to_string(self, date):
+        return date.strftime('%b %d, %Y %X %Z')
 
     def get_commit_date(self, path, pos):
         (dir_path, file_name) = os.path.split(path)
@@ -69,7 +73,6 @@ class iobuilder:
         timestamps_str = subprocess.check_output(['git', 'log', '--format=%at', file_name]).decode('utf-8')
         timestamp_str = timestamps_str.splitlines()[pos]
         timestamp = int(timestamp_str)
-        # dt.strftime('%b %d, %Y %X %Z')
         return datetime.datetime.fromtimestamp(timestamp, datetime.timezone.utc)
 
     def build_io(self):

@@ -1,6 +1,4 @@
 # Check Assumptions
-##### Written: June 29, 2017
-##### Last Edited: July 8, 2017
 
 I learned this lesson (again) last night. I've been using [Scrapy](https://github.com/scrapy/scrapy) to create a spider with the goal of gathering data from [CUPHD's health inspection reports database](http://www.c-uphd.org/food-inspection-reports.html). Inspection reports are grouped by facility and can be found via two different search mechanisms. The endpoint for both is http://il.healthinspections.us/champaign/search.cfm. The first mechanism allows for searches by the first character in the name of the facility. In other words, I could search for all facilities beginning with the letter 'A'. The second, more advanced search mechanism includes several fields. Among them are the start and end date, which represent an inspection date range. They default to the entire available range, which is January 1, 2008 to present. They are passed as the GET parameters `sd` and `ed` in the format MM/DD/YYYY.
 

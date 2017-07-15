@@ -75,4 +75,6 @@ class IOBlogBuilder(IOPageBuilder):
 
     def _prepare_content(self, content):
         entries = list(content.values())
+        for entry in entries:
+            entry['show_last_edit_date'] = entry['last_edit_date'] != entry['publish_date']
         return {'blog_entries': entries}

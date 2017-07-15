@@ -6,6 +6,13 @@
     {% for entry in blog_entries %}
         <article>
             {{ entry.html }}
+            <p class="blog-dates">
+                Published: {{ entry.publish_date_string }}
+                {% if entry.show_last_edit_date -%}
+                    <br/>
+                    Last edited: {{ entry.last_edit_date_string }}
+                {%- endif %}
+            </p>
         </article>
     {% endfor %}
 {%- endblock %}
