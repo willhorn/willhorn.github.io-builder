@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import datetime
 import os
 import subprocess
 import sys
@@ -8,6 +9,7 @@ import jinja2
 import markdown
 
 from mdchecklistext import ChecklistExtension
+from iopagebuilder import IOAboutBuilder, IOGoalsBuilder, IOBlogBuilder
 
 
 def dir_check(dir):
@@ -20,90 +22,63 @@ class iobuilder:
     def __init__(self, base_dir):
         self.source_dir = os.path.join(base_dir, 'willhorn.github.io-builder')
         dir_check(self.source_dir)
-        self.source_content_dir = os.path.join(self.source_dir, 'content')
-        dir_check(self.source_content_dir)
         self.destination_dir = os.path.join(base_dir, 'willhorn.github.io')
         dir_check(self.destination_dir)
         self.md = markdown.Markdown(extensions=[ChecklistExtension()])
         self.template_env = jinja2.Environment(
             loader=jinja2.FileSystemLoader(os.path.join(self.source_dir, 'templates'))
         )
+        self.page_builders = {
+            'about': IOAboutBuilder(self.template_env, self.destination_dir),
+            'goals': IOGoalsBuilder(self.template_env, self.destination_dir),
+            'blog': IOBlogBuilder(self.template_env, self.destination_dir)
+        }
+
+    def get_content_from_dir(self, dir_path):
+        content = {}
+        os.chdir(dir_path)
+        dir_contents = os.listdir(dir_path)
+        for i in dir_contents:
+            path = os.path.join(dir_path, i)
+            if os.path.isdir(path) and not path.startswith('.'):
+                content[i] = self.get_content_from_dir(path)
+            elif i.endswith('.md'):
+                name = i[:-3]
+                content[name] = self.get_content_from_md(path)
+                content[name]['name'] = name
+        return content
+
+    def get_content_from_md(self, path):
+        # TODO: append publish/edit dates to end of blog entries
+        # if they're the same only include publish
+        # markdown, html, publish_date, last_edit_date
+        with open(path, 'r') as f:
+            md = f.read()
+        return {
+            'markdown': md,
+            'markdown_line_count': len(md.splitlines()),
+            'html': self.md.convert(md),
+            'publish_date': self.get_commit_date(path, -1),
+            'last_edit_date': self.get_commit_date(path, 0),
+            'path': path
+        }
+
+    def get_commit_date(self, path, pos):
+        (dir_path, file_name) = os.path.split(path)
+        os.chdir(dir_path)
+        timestamps_str = subprocess.check_output(['git', 'log', '--format=%at', file_name]).decode('utf-8')
+        timestamp_str = timestamps_str.splitlines()[pos]
+        timestamp = int(timestamp_str)
+        # dt.strftime('%b %d, %Y %X %Z')
+        return datetime.datetime.fromtimestamp(timestamp, datetime.timezone.utc)
 
     def build_io(self):
-        self.build_about_page()
-        self.build_goals_page()
-        self.build_blog_page()
+        content = self.get_content_from_dir(os.path.join(self.source_dir, 'content'))
+        for i in content:
+            page_builder = self.page_builders[i]
+            page_builder.build_page(i, content[i])
         return self.destination_dir
 
-    # COMMON
-    def write_html(self, html, file):
-        destination_path = os.path.join(self.destination_dir, file)
-        with open(destination_path, 'w') as f:
-            f.write(html)
-        # clean up with https://github.com/htacg/tidy-html5
-        subprocess.check_call(['tidy', '-imq', '-w', '132', destination_path])
-        return destination_path
-
-    def md_convert(self, file):
-        with open(file, 'r') as f:
-            text = f.read()
-        html = self.md.convert(text)
-        return html
-
-    # ABOUT
-    def build_about_page(self):
-        template = self.template_env.get_template('about.html')
-        md_file = os.path.join(self.source_content_dir, 'about.md')
-        html = self.md_convert(md_file)
-        html = template.render(html=html)
-        return self.write_html(html, 'index.html')
-
-    # GOALS
-    def build_goals_page(self):
-        template = self.template_env.get_template('goals.html')
-        goals_dir = os.path.join(self.source_content_dir, 'goals')
-        dir_check(goals_dir)
-        goal_groups = []
-        for file in os.listdir(goals_dir):
-            if file.endswith('.md'):
-                path = os.path.join(goals_dir, file)
-                with open(path) as f:
-                    line_count = len(f.readlines())
-                goal_group = {
-                    'id': file.split('.')[0],
-                    'html': self.md_convert(path),
-                    'len': line_count
-                }
-                goal_groups.append(goal_group)
-        goal_groups.sort(key=lambda x: x['len'], reverse=True)
-        columns = [
-            {'content': [], 'len': 0},
-            {'content': [], 'len': 0}
-        ]
-        for goal_group in goal_groups:
-            column = 0
-            if columns[0]['len'] > columns[1]['len']:
-                column = 1
-            columns[column]['content'].append(goal_group)
-            columns[column]['len'] += goal_group['len']
-        goal_groups = columns[0]['content'] + columns[1]['content']
-        for i in range(len(goal_groups)):
-            goal_groups[i]['order'] = i
-        html = template.render(goal_groups=goal_groups)
-        return self.write_html(html, 'goals.html')
-
-    # BLOG
-    def build_blog_page(self):
-        template = self.template_env.get_template('blog.html')
-        blog_dir = os.path.join(self.source_content_dir, 'blog')
-        dir_check(blog_dir)
-        blog_entries = []
-        for file in os.listdir(blog_dir):
-            if file.endswith('.md'):
-                path = os.path.join(blog_dir, file)
-                blog_entries.append(self.md_convert(path))
-        html = template.render(blog_entries=blog_entries)
-        return self.write_html(html, 'blog.html')
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:

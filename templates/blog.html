@@ -5,7 +5,7 @@
 {% block content -%}
     {% for entry in blog_entries %}
         <article>
-            {{ entry }}
+            {{ entry.html }}
         </article>
     {% endfor %}
 {%- endblock %}
