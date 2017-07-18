@@ -2,6 +2,7 @@
 
 import datetime
 import os
+import shutil
 import subprocess
 import sys
 
@@ -75,11 +76,26 @@ class iobuilder:
         timestamp = int(timestamp_str)
         return datetime.datetime.fromtimestamp(timestamp, datetime.timezone.utc)
 
+    def _clean_destination_dir(self):
+        dir_contents = os.listdir(self.destination_dir)
+        for i in dir_contents:
+            path = os.path.join(self.destination_dir, i)
+            if path.endswith('.html'):
+                os.remove(path)
+            elif os.path.isdir(path) and i == 'images':
+                shutil.rmtree(path)
+
     def build_io(self):
+        self._clean_destination_dir()
         content = self.get_content_from_dir(os.path.join(self.source_dir, 'content'))
+        shutil.copytree(
+            os.path.join(self.source_dir, 'content', 'images'),
+            os.path.join(self.destination_dir, 'images')
+        )
         for i in content:
-            page_builder = self.page_builders[i]
-            page_builder.build_page(i, content[i])
+            if content[i]:
+                page_builder = self.page_builders[i]
+                page_builder.build_page(i, content[i])
         return self.destination_dir
 
 
