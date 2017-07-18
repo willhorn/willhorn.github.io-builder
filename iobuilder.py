@@ -29,11 +29,12 @@ class iobuilder:
         self.template_env = jinja2.Environment(
             loader=jinja2.FileSystemLoader(os.path.join(self.source_dir, 'templates'))
         )
-        self.page_builders = {
-            'about': IOAboutBuilder(self.template_env, self.destination_dir),
-            'goals': IOGoalsBuilder(self.template_env, self.destination_dir),
-            'blog': IOBlogBuilder(self.template_env, self.destination_dir)
+        self.page_builder_classes = {
+            'about': IOAboutBuilder,
+            'goals': IOGoalsBuilder,
+            'blog': IOBlogBuilder
         }
+        self.page_builders = {}  # only create one builder per class and cache them here
 
     def get_content_from_dir(self, dir_path):
         content = {}
@@ -94,9 +95,18 @@ class iobuilder:
         )
         for i in content:
             if content[i]:
-                page_builder = self.page_builders[i]
+                page_builder_class = self.page_builder_classes[i]
+                page_builder = self._get_page_builder(page_builder_class)
                 page_builder.build_page(i, content[i])
         return self.destination_dir
+
+    def _get_page_builder(self, page_builder_class):
+        if page_builder_class not in self.page_builders:
+            self.page_builders[page_builder_class] = page_builder_class(
+                self.template_env,
+                self.destination_dir
+            )
+        return self.page_builders[page_builder_class]
 
 
 if __name__ == '__main__':
