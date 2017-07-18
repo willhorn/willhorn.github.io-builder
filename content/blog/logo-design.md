@@ -12,11 +12,11 @@ The desired properties of the logo were that:
 6. the distance between the "dot" and the base of the "i" `i` be less than or equal to `δ`, and
 7. all segments be at the same angle `ϴ` (or its supplement) with respect to the x-axis.
 
-Given these contraints, I dusted off my memories of trigonometry and went to work putting all points of interest in terms of `δ`, `ϴ`, and `i`:</p>
+Given these contraints, I dusted off my memories of trigonometry and went to work putting all points of interest in terms of `δ`, `ϴ`, and `i`:
 
 ![Trigonometric Calculations](images/logo_work.jpg)
 
-I then `Simplify[]`'d the points using Wolfram Language and put them in a `Manipulate[]` so I could quickly and easily see how the logo looked with different values of `δ`, `ϴ`, and `i`. I also created a variable in the `Manipulate[]` for the background color. Initially, I created polygons for the five rectangular segments of the "W". However, I wanted the "W" itself to be transparent, so I ended up creating polygons for the surrounding "background". There was no need to keep the polygons within the enclosing square region since I could set the plot range to clip everything outside of that square.</p>
+I then `Simplify[]`'d the points using Wolfram Language and put them in a `Manipulate[]` so I could quickly and easily see how the logo looked with different values of `δ`, `ϴ`, and `i`. I also created a variable in the `Manipulate[]` for the background color. Initially, I created polygons for the five rectangular segments of the "W". However, I wanted the "W" itself to be transparent, so I ended up creating polygons for the surrounding "background". There was no need to keep the polygons within the enclosing square region since I could set the plot range to clip everything outside of that square.
 
 Here is the final code used to create my logo:
 
