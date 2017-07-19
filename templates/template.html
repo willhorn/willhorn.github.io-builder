@@ -3,14 +3,14 @@
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="utf-8">
-    <link rel="stylesheet" type="text/css" href="main.css">
+    <link rel="stylesheet" type="text/css" href="{{ path_to_root }}main.css">
     <link href='https://fonts.googleapis.com/css?family=Lato:300' rel='stylesheet' type='text/css'>
-    <link rel="icon" type="image/png" href="images/logo_rounded_16px.png">
+    <link rel="icon" type="image/png" href="{{ path_to_root }}images/logo_rounded_16px.png">
     <title>Will/Horn</title>
   </head>
   <body>
     <header class="flex_container header_row">
-      <img class="logo" src="images/logo_80px.png" alt="logo">
+      <img class="logo" src="{{ path_to_root }}images/logo_80px.png" alt="logo">
       <div class="header">
         <h1>
           W<span class="io_header">I</span>LL<span class="io_header">/</span>H<span class="io_header">O</span>RN
@@ -20,9 +20,9 @@
     </header>
     <nav>
       <ul class="flex_container navigation">
-        <li id="nav_about" class="{% block nav_about %}{% endblock %}"><a href="index.html">About</a></li>
-        <li id="nav_blog" class="{% block nav_blog %}{% endblock %}"><a href="blog.html">Blog</a></li>
-        <li id="nav_goals" class="{% block nav_goals %}{% endblock %}"><a href="goals.html">Goals</a></li>
+        <li id="nav_about" class="{% block nav_about %}{% endblock %}"><a href="{{ path_to_root }}index.html">About</a></li>
+        <li id="nav_blog" class="{% block nav_blog %}{% endblock %}"><a href="{{ path_to_root }}blog.html">Blog</a></li>
+        <li id="nav_goals" class="{% block nav_goals %}{% endblock %}"><a href="{{ path_to_root }}goals.html">Goals</a></li>
       </ul>
     </nav>
     <section id="main_content" class="{% block main_content_class %}{% endblock %}">

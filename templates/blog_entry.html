@@ -1,0 +1,16 @@
+{% extends "template.html" %}
+{%- block nav_blog -%}
+    nav_selected
+{%- endblock -%}
+{% block content -%}
+    <article>
+        {{ html }}
+        <p class="blog-dates">
+            Published: {{ publish_date_string }}
+            {% if show_last_edit_date -%}
+                <br/>
+                Last edited: {{ last_edit_date_string }}
+            {%- endif %}
+        </p>
+    </article>
+{%- endblock %}

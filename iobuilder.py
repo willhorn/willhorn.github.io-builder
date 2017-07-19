@@ -25,7 +25,7 @@ class iobuilder:
         dir_check(self.source_dir)
         self.destination_dir = os.path.join(base_dir, 'willhorn.github.io')
         dir_check(self.destination_dir)
-        self.md = markdown.Markdown(extensions=[ChecklistExtension()])
+        self.md = markdown.Markdown(extensions=[ChecklistExtension(), 'markdown.extensions.fenced_code'])
         self.template_env = jinja2.Environment(
             loader=jinja2.FileSystemLoader(os.path.join(self.source_dir, 'templates'))
         )
@@ -36,21 +36,21 @@ class iobuilder:
         }
         self.page_builders = {}  # only create one builder per class and cache them here
 
-    def get_content_from_dir(self, dir_path):
+    def get_content_from_dir(self, dir_path, depth=0):
         content = {}
         os.chdir(dir_path)
         dir_contents = os.listdir(dir_path)
         for i in dir_contents:
             path = os.path.join(dir_path, i)
             if os.path.isdir(path) and not path.startswith('.'):
-                content[i] = self.get_content_from_dir(path)
+                content[i] = self.get_content_from_dir(path, depth+1)
             elif i.endswith('.md'):
                 name = i[:-3]
-                content[name] = self.get_content_from_md(path)
+                content[name] = self.get_content_from_md(path, depth)
                 content[name]['name'] = name
         return content
 
-    def get_content_from_md(self, path):
+    def get_content_from_md(self, path, depth):
         with open(path, 'r') as f:
             md = f.read()
         publish_date = self.get_commit_date(path, -1)
@@ -63,7 +63,8 @@ class iobuilder:
             'publish_date_string': self._date_to_string(publish_date),
             'last_edit_date': last_edit_date,
             'last_edit_date_string': self._date_to_string(last_edit_date),
-            'path': path
+            'path': path,
+            'path_to_root': '../' * depth
         }
 
     def _date_to_string(self, date):
@@ -83,8 +84,9 @@ class iobuilder:
             path = os.path.join(self.destination_dir, i)
             if path.endswith('.html'):
                 os.remove(path)
-            elif os.path.isdir(path) and i == 'images':
+            elif os.path.isdir(path) and i in ('images', 'blog'):
                 shutil.rmtree(path)
+        os.mkdir(os.path.join(self.destination_dir, 'blog'))
 
     def build_io(self):
         self._clean_destination_dir()
@@ -104,7 +106,8 @@ class iobuilder:
         if page_builder_class not in self.page_builders:
             self.page_builders[page_builder_class] = page_builder_class(
                 self.template_env,
-                self.destination_dir
+                self.destination_dir,
+                self.md
             )
         return self.page_builders[page_builder_class]
 
