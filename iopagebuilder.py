@@ -83,7 +83,9 @@ class IOBlogBuilder(IOPageBuilder):
         for name, entry in content.items():
             content[name]['relative_path'] = blog_entry_builder.build_page(name, entry)
             content[name]['preview_html'] = self._get_blog_preview(entry)
-        return {'blog_entries': list(content.values())}
+        blog_entries = list(content.values())
+        blog_entries.sort(key=lambda x: x['publish_date'], reverse=True)  # sort previews by published date
+        return {'blog_entries': blog_entries}
 
     def _get_blog_preview(self, entry):
         preview = entry['markdown'][:801]
