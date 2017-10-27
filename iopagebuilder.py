@@ -88,6 +88,7 @@ class IOBlogBuilder(IOPageBuilder):
         return {'blog_entries': blog_entries}
 
     def _get_blog_preview(self, entry):
+        # TODO: remove images
         preview = entry['markdown'][:801]
         preview = preview.rsplit(maxsplit=1)[0]
         preview = preview.rstrip().rstrip('.') + '...'
